@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nocturne</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js" defer></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="grain-overlay" aria-hidden="true"></div>
+
+  <div class="app" id="app">
+
+    <!-- ╔══════════════════════════════════════════════════════╗
+         ║  HEADER  (full width on all breakpoints)           ║
+         ╚══════════════════════════════════════════════════════╝ -->
+    <header class="app-header" role="banner">
+      <div class="app-header__left">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <h1 class="brand-name">Nocturne</h1>
+      </div>
+
+      <!-- Desktop inline nav (hidden on mobile, shown on desktop) -->
+      <nav class="header-nav" role="tablist" aria-label="App navigation">
+        <button class="header-nav__tab"
+                data-view="equaliser"
+                role="tab" aria-selected="false"
+                aria-controls="view-equaliser">
+          <i class="ph ph-equalizer"></i>
+          <span>Equaliser</span>
+        </button>
+        <button class="header-nav__tab"
+                data-view="tracklist"
+                role="tab" aria-selected="false"
+                aria-controls="view-tracklist">
+          <i class="ph ph-music-notes-simple"></i>
+          <span>Tracks</span>
+        </button>
+        <button class="header-nav__tab"
+                data-view="playlists"
+                role="tab" aria-selected="false"
+                aria-controls="view-playlists">
+          <i class="ph ph-queue"></i>
+          <span>Playlists</span>
+        </button>
+      </nav>
+
+      <div class="app-header__right">
+        <!-- Playing indicator bars -->
+        <div class="hdr-indicator" id="hdr-indicator" aria-hidden="true">
+          <span class="hdr-bar"></span>
+          <span class="hdr-bar"></span>
+          <span class="hdr-bar"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ╔══════════════════════════════════════════════════════╗
+         ║  BODY  (header below this, nav above footer)       ║
+         ╚══════════════════════════════════════════════════════╝ -->
+    <div class="app-body">
+
+      <!-- ── LEFT PANEL — Now Playing (always visible on desktop) ── -->
+      <section class="panel panel--now-playing"
+               id="view-now-playing"
+               role="region"
+               aria-label="Now Playing">
+
+        <!-- Album artwork -->
+        <div class="np-artwork">
+          <div class="np-vinyl" aria-hidden="true"></div>
+          <div class="np-cover-wrap" id="np-cover-wrap">
+            <div class="cover-shimmer" aria-hidden="true"></div>
+            <img id="cover-art" class="cover-art"
+                 src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                 alt="Album cover" draggable="false" />
+          </div>
+        </div>
+
+        <!-- Song meta -->
+        <div class="np-meta" id="np-meta" aria-live="polite" aria-atomic="true">
+          <p  id="song-artist" class="np-meta__artist">—</p>
+          <h2 id="song-title"  class="np-meta__title">Loading…</h2>
+          <p  id="song-album"  class="np-meta__album"></p>
+        </div>
+
+        <!-- Mini visualizer -->
+        <div class="np-mini-vis" aria-hidden="true">
+          <div class="visualizer visualizer--mini idle" id="visualizer-mini"></div>
+        </div>
+
+        <!-- Seek / progress -->
+        <section class="progress-section" aria-label="Playback position">
+          <span id="time-current" class="time time--current">0:00</span>
+          <div class="progress-track" id="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+            <input type="range" id="seek-bar" class="seek-bar"
+                   min="0" max="1000" value="0" step="1"
+                   aria-label="Seek position" />
+          </div>
+          <span id="time-total" class="time time--total">0:00</span>
+        </section>
+
+        <!-- Playback controls -->
+        <section class="controls" aria-label="Playback controls">
+          <button class="ctrl ctrl--small" id="btn-shuffle" aria-label="Toggle shuffle">
+            <i class="ph ph-shuffle"></i>
+          </button>
+          <button class="ctrl ctrl--medium" id="btn-prev" aria-label="Previous track">
+            <i class="ph ph-skip-back"></i>
+          </button>
+          <button class="ctrl ctrl--play" id="btn-play" aria-label="Play">
+            <i class="ph-fill ph-play" id="play-icon"></i>
+          </button>
+          <button class="ctrl ctrl--medium" id="btn-next" aria-label="Next track">
+            <i class="ph ph-skip-forward"></i>
+          </button>
+          <button class="ctrl ctrl--small" id="btn-repeat" aria-label="Toggle repeat">
+            <i class="ph ph-repeat"></i>
+          </button>
+        </section>
+
+        <!-- Volume -->
+        <section class="volume-section" aria-label="Volume">
+          <button class="vol-btn" id="btn-mute" aria-label="Mute/unmute">
+            <i class="ph ph-speaker-low" id="vol-icon"></i>
+          </button>
+          <div class="vol-track">
+            <div class="vol-fill" id="vol-fill"></div>
+            <input type="range" id="volume-slider" class="volume-slider"
+                   min="0" max="1" step="0.01" value="0.8" aria-label="Volume" />
+          </div>
+          <i class="ph ph-speaker-high vol-end-icon" aria-hidden="true"></i>
+        </section>
+
+      </section>
+      <!-- /panel--now-playing -->
+
+
+      <!-- ── RIGHT PANEL — Equaliser + Tracklist ─────────────────── -->
+      <div class="panel panel--right" id="panel-right">
+
+        <!-- ── EQUALISER VIEW ──────────────────────────────────────── -->
+        <section class="view view--equaliser"
+                 id="view-equaliser"
+                 role="region"
+                 aria-label="Equaliser"
+                 aria-hidden="true">
+
+          <!-- Mini now-playing strip with play btn -->
+          <div class="eq-strip" aria-live="polite">
+            <img id="eq-thumb" class="eq-strip__thumb"
+                 src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                 alt="" aria-hidden="true" />
+            <div class="eq-strip__meta">
+              <span id="eq-title"  class="eq-strip__title">—</span>
+              <span id="eq-artist" class="eq-strip__artist">—</span>
+            </div>
+            <button class="ctrl ctrl--play ctrl--play-sm" id="btn-play-eq" aria-label="Play/Pause">
+              <i class="ph-fill ph-play" id="play-icon-eq"></i>
+            </button>
+          </div>
+
+          <!-- Live frequency visualizer -->
+          <div class="eq-canvas" aria-hidden="true">
+            <div class="visualizer visualizer--large idle" id="visualizer-large"></div>
+            <div class="eq-reflection" aria-hidden="true">
+              <div class="visualizer visualizer--reflect idle" id="visualizer-reflect"></div>
+            </div>
+          </div>
+
+          <!-- Frequency axis labels -->
+          <div class="eq-freq-axis" aria-hidden="true">
+            <span>20 Hz</span><span>200 Hz</span><span>1 kHz</span>
+            <span>4 kHz</span><span>10 kHz</span><span>20 kHz</span>
+          </div>
+
+          <!-- ── EQ BAND SLIDERS ─────────────────────────────── -->
+          <div class="eq-bands" role="group" aria-label="Equaliser bands">
+
+            <!-- Bass -->
+            <div class="eq-band" id="eq-band-bass">
+              <span class="eq-band__value" id="eq-val-bass">0 dB</span>
+              <div class="eq-band__track" id="eq-track-bass">
+                <div class="eq-band__fill" id="eq-fill-bass"></div>
+                <div class="eq-band__knob" id="eq-knob-bass"></div>
+                <input type="range" class="eq-band__slider" id="eq-slider-bass"
+                       min="-12" max="12" step="0.5" value="0"
+                       aria-label="Bass gain" aria-valuetext="0 dB" />
+              </div>
+              <span class="eq-band__label">Bass</span>
+              <span class="eq-band__sublabel">80 Hz</span>
+            </div>
+
+            <!-- Mid -->
+            <div class="eq-band" id="eq-band-mid">
+              <span class="eq-band__value" id="eq-val-mid">0 dB</span>
+              <div class="eq-band__track" id="eq-track-mid">
+                <div class="eq-band__fill" id="eq-fill-mid"></div>
+                <div class="eq-band__knob" id="eq-knob-mid"></div>
+                <input type="range" class="eq-band__slider" id="eq-slider-mid"
+                       min="-12" max="12" step="0.5" value="0"
+                       aria-label="Mid gain" aria-valuetext="0 dB" />
+              </div>
+              <span class="eq-band__label">Mid</span>
+              <span class="eq-band__sublabel">1 kHz</span>
+            </div>
+
+            <!-- Treble -->
+            <div class="eq-band" id="eq-band-treble">
+              <span class="eq-band__value" id="eq-val-treble">0 dB</span>
+              <div class="eq-band__track" id="eq-track-treble">
+                <div class="eq-band__fill" id="eq-fill-treble"></div>
+                <div class="eq-band__knob" id="eq-knob-treble"></div>
+                <input type="range" class="eq-band__slider" id="eq-slider-treble"
+                       min="-12" max="12" step="0.5" value="0"
+                       aria-label="Treble gain" aria-valuetext="0 dB" />
+              </div>
+              <span class="eq-band__label">Treble</span>
+              <span class="eq-band__sublabel">10 kHz</span>
+            </div>
+
+          </div>
+          <!-- /eq-bands -->
+
+          <!-- Reset all bands -->
+          <div class="eq-reset-row">
+            <button class="eq-reset-btn" id="eq-reset" aria-label="Reset all EQ bands to 0 dB">
+              <i class="ph ph-arrow-counter-clockwise"></i>
+              Reset
+            </button>
+          </div>
+
+        </section>
+        <!-- /view--equaliser -->
+
+
+        <!-- ── TRACKLIST VIEW ──────────────────────────────────────── -->
+        <section class="view view--tracklist is-active"
+                 id="view-tracklist"
+                 role="region"
+                 aria-label="Track list"
+                 aria-hidden="false">
+
+          <div class="tracklist-header">
+            <h2 class="tracklist-title">Tracks</h2>
+            <span class="tracklist-count" id="tracklist-count"></span>
+          </div>
+
+          <!-- Loading skeleton -->
+          <div class="tracklist-skeleton" id="tracklist-skeleton">
+            <div class="sk-row"><div class="sk-thumb"></div><div class="sk-body"><div class="sk-line sk--w70"></div><div class="sk-line sk--w45"></div></div></div>
+            <div class="sk-row"><div class="sk-thumb"></div><div class="sk-body"><div class="sk-line sk--w55"></div><div class="sk-line sk--w35"></div></div></div>
+            <div class="sk-row"><div class="sk-thumb"></div><div class="sk-body"><div class="sk-line sk--w80"></div><div class="sk-line sk--w50"></div></div></div>
+            <div class="sk-row"><div class="sk-thumb"></div><div class="sk-body"><div class="sk-line sk--w60"></div><div class="sk-line sk--w40"></div></div></div>
+            <div class="sk-row"><div class="sk-thumb"></div><div class="sk-body"><div class="sk-line sk--w75"></div><div class="sk-line sk--w55"></div></div></div>
+          </div>
+
+          <ol class="tracklist" id="tracklist" role="listbox" aria-label="Track list"></ol>
+
+        </section>
+        <!-- /view--tracklist -->
+
+
+        <!-- ── PLAYLISTS VIEW ──────────────────────────────────────── -->
+        <section class="view view--playlists"
+                 id="view-playlists"
+                 role="region"
+                 aria-label="Playlists"
+                 aria-hidden="true">
+
+          <div class="pl-header">
+            <h2 class="pl-title">Playlists</h2>
+            <span class="pl-subtitle" id="pl-subtitle"></span>
+          </div>
+
+          <!-- Skeleton -->
+          <div class="tracklist-skeleton" id="playlists-skeleton">
+            <div class="sk-row"><div class="sk-thumb sk-thumb--lg"></div><div class="sk-body"><div class="sk-line sk--w60"></div><div class="sk-line sk--w35"></div></div></div>
+            <div class="sk-row"><div class="sk-thumb sk-thumb--lg"></div><div class="sk-body"><div class="sk-line sk--w75"></div><div class="sk-line sk--w40"></div></div></div>
+            <div class="sk-row"><div class="sk-thumb sk-thumb--lg"></div><div class="sk-body"><div class="sk-line sk--w55"></div><div class="sk-line sk--w30"></div></div></div>
+          </div>
+
+          <!-- Folder list — populated by JS -->
+          <div class="pl-folder-list" id="pl-folder-list"></div>
+
+        </section>
+        <!-- /view--playlists -->
+
+      </div>
+      <!-- /panel--right -->
+
+    </div>
+    <!-- /app-body -->
+
+    <!-- ── STATUS BANNER ───────────────────────────────────────────── -->
+    <div class="status-banner" id="status-banner"
+         role="alert" aria-live="assertive" hidden>
+      <i class="ph ph-warning-circle"></i>
+      <span id="status-message">An error occurred.</span>
+      <button class="status-close" id="status-close" aria-label="Dismiss">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+
+    <!-- ── BOTTOM NAV (mobile only) ──────────────────────────────── -->
+    <nav class="bottom-nav" role="tablist" aria-label="App navigation">
+      <button class="nav-tab is-active"
+              data-view="now-playing"
+              role="tab" aria-selected="true"
+              aria-controls="view-now-playing">
+        <i class="ph-fill ph-music-note-simple"></i>
+        <span>Now Playing</span>
+      </button>
+      <button class="nav-tab"
+              data-view="equaliser"
+              role="tab" aria-selected="false"
+              aria-controls="view-equaliser">
+        <i class="ph ph-equalizer"></i>
+        <span>Equaliser</span>
+      </button>
+      <button class="nav-tab"
+              data-view="tracklist"
+              role="tab" aria-selected="false"
+              aria-controls="view-tracklist">
+        <i class="ph ph-music-notes-simple"></i>
+        <span>Tracks</span>
+      </button>
+      <button class="nav-tab"
+              data-view="playlists"
+              role="tab" aria-selected="false"
+              aria-controls="view-playlists">
+        <i class="ph ph-queue"></i>
+        <span>Playlists</span>
+      </button>
+    </nav>
+
+  </div>
+  <!-- /app -->
+
+  <audio id="audio-element" preload="metadata"></audio>
+  <script src="script.js"></script>
+</body>
+</html>
