@@ -1,29 +1,14 @@
 /**
- * NOCTURNE — Music Player  |  script.js  (v3)
- *
  * Layout modes:
  *  Mobile  < 768px — single-column, bottom nav drives all three views
  *  Desktop ≥ 768px — two-column; Now Playing always left;
- *                    header nav drives Equaliser / Tracklist on right
+ *                    header nav Equaliser / Tracklist on right
  */
 
 'use strict';
 
-/* ═══════════════════════════════════════════════════════════════
-   CONFIG
-   ═══════════════════════════════════════════════════════════════ */
-const DESKTOP_BP = 768;   // px — must match CSS media query
+const DESKTOP_BP = 768;   
 
-/**
- * PLAYLIST LOADING STRATEGY
- * ─────────────────────────
- * 1. Try Audius public API  — decentralised, CORS-open, no key required.
- * 2. Try iTunes Search API  — works from most hosted origins; blocked on
- *    local file:// and some strict CSP environments.
- 
- *
- * To plug in your own API replace fetchAudius or fetchItunes below.
- */
 
 const AUDIUS_HOST = 'https://discoveryprovider.audius.co';
 const AUDIUS_API = `${AUDIUS_HOST}/v1/tracks/search?query=Drake&limit=20&app_name=Nocturne`;
@@ -33,9 +18,6 @@ const ITUNES_API  = 'https://itunes.apple.com/search?term=hip+hop+rap&entity=son
 const BAR_COUNT_MINI  = 24;
 const BAR_COUNT_LARGE = 48;
 
-/* ═══════════════════════════════════════════════════════════════
-   STATE
-   ═══════════════════════════════════════════════════════════════ */
 const state = {
   playlist:     [],
   currentIndex: 0,
@@ -43,18 +25,14 @@ const state = {
   isShuffle:    false,
   isRepeat:     false,
   prevVolume:   0.8,
-  /** The view shown on mobile, or the right-panel view on desktop */
+  
   activeView:   'tracklist',
 };
 
-/** True when the viewport is in desktop mode */
 function isDesktop() {
   return window.innerWidth >= DESKTOP_BP;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   DOM REFS
-   ═══════════════════════════════════════════════════════════════ */
 const appEl         = document.getElementById('app');
 const audio         = document.getElementById('audio-element');
 
@@ -128,12 +106,8 @@ const eqKnobMid      = document.getElementById('eq-knob-mid');
 const eqKnobTreble   = document.getElementById('eq-knob-treble');
 const eqResetBtn     = document.getElementById('eq-reset');
 
-// Nav — both sets (bottom mobile + header desktop)
 const allNavTabs    = document.querySelectorAll('.nav-tab, .header-nav__tab');
 
-/* ═══════════════════════════════════════════════════════════════
-   WEB AUDIO API  — filter chain: source → bass → mid → treble → analyser → out
-   ═══════════════════════════════════════════════════════════════ */
 let audioCtx, analyser, sourceNode, dataArray, rafId;
 let filterBass, filterMid, filterTreble;
 
@@ -142,7 +116,7 @@ function initAudioContext() {
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // ── Three EQ filter nodes ──────────────────────────────────
+    //Three EQ filter nodes
     filterBass = audioCtx.createBiquadFilter();
     filterBass.type            = 'lowshelf';
     filterBass.frequency.value = 80;
@@ -159,18 +133,12 @@ function initAudioContext() {
     filterTreble.frequency.value = 10000;
     filterTreble.gain.value      = 0;
 
-    // ── Analyser for the visualizer ───────────────────────────
+    //Analyser for the visualizer
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 256;
     analyser.smoothingTimeConstant = 0.80;
     dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-    // ── Attempt to connect the audio element to the graph ─────
-    // createMediaElementSource requires the audio to have been
-    // loaded with CORS headers. We set crossOrigin, reload the
-    // current source, then reconnect. If the server doesn't
-    // support CORS the try/catch catches the SecurityError and
-    // we fall back to simulation — audio still plays normally.
     try {
       const currentSrc  = audio.src;
       const currentTime = audio.currentTime;
@@ -191,13 +159,10 @@ function initAudioContext() {
         .connect(audioCtx.destination);
 
     } catch (corsErr) {
-      // Server doesn't allow CORS — strip the attribute so audio
-      // keeps loading normally, and use simulation for visualiser.
       console.warn('Web Audio API: CORS not supported by this source, using simulation.', corsErr.message);
       audio.removeAttribute('crossOrigin');
       analyser  = null;
       dataArray = null;
-      // Route filters straight to destination (no analyser tap)
       if (sourceNode) {
         sourceNode.connect(filterBass).connect(filterMid)
                   .connect(filterTreble).connect(audioCtx.destination);
@@ -210,9 +175,6 @@ function initAudioContext() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   VISUALIZER BARS
-   ═══════════════════════════════════════════════════════════════ */
 function buildBars(container, count) {
   container.innerHTML = '';
   for (let i = 0; i < count; i++) {
@@ -231,7 +193,7 @@ function refreshBarRefs() {
   barsReflect = [...vizReflect.querySelectorAll('.eq-bar')];
 }
 
-/* ── Draw loop ────────────────────────────────────────────────── */
+/*Draw loop  */
 function drawFrame() {
   if (!state.isPlaying) return;
   rafId = requestAnimationFrame(drawFrame);
@@ -287,36 +249,21 @@ function stopVisualizer() {
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   NAVIGATION
-   ═══════════════════════════════════════════════════════════════ */
+/*NAVIGATION */
 
-/**
- * Switch the active view.
- *
- * Mobile: 'now-playing' | 'equaliser' | 'tracklist'
- *   – panel--now-playing or a right-panel .view gets is-active
- *
- * Desktop: 'equaliser' | 'tracklist'
- *   – only right-panel .view changes; NP panel is always visible
- *   – clicking 'now-playing' on desktop defaults to 'tracklist'
- */
 function switchView(viewName) {
-  // On desktop, "now-playing" tab doesn't exist in header nav,
-  // but if called programmatically, fall through to tracklist.
   const resolvedView = (isDesktop() && viewName === 'now-playing')
     ? 'tracklist'
     : viewName;
 
   state.activeView = resolvedView;
 
-  // ── Mobile: show/hide full panels + views ─────────────────────
   if (!isDesktop()) {
     // Now Playing panel
     const npPanel = document.getElementById('view-now-playing');
     npPanel.classList.toggle('is-active', resolvedView === 'now-playing');
 
-    // Right panel views (equaliser, tracklist, playlists)
+    // Right panel views
     document.querySelectorAll('.panel--right .view').forEach(v => {
       const match = v.id === `view-${resolvedView}`;
       v.classList.toggle('is-active', match);
@@ -329,7 +276,7 @@ function switchView(viewName) {
     const rightActive = resolvedView !== 'now-playing';
     rightPanel.style.pointerEvents = rightActive ? 'auto' : 'none';
   }
-  // ── Desktop: only right-panel views change ────────────────────
+  
   else {
     document.querySelectorAll('.panel--right .view').forEach(v => {
       const match = v.id === `view-${resolvedView}`;
@@ -338,24 +285,18 @@ function switchView(viewName) {
     });
   }
 
-  // ── Sync nav tab highlights (both sets) ───────────────────────
+  // Sync nav tab highlights (both sets) 
   allNavTabs.forEach(tab => {
     const tabView = tab.dataset.view;
-    // On desktop, we don't have a "now-playing" tab in the header,
-    // so just check if the tab view matches
     const active = (tabView === resolvedView) ||
-                   // On mobile now-playing, match bottom-nav now-playing tab
                    (resolvedView === 'now-playing' && tabView === 'now-playing' && !isDesktop());
     tab.classList.toggle('is-active', active);
     tab.setAttribute('aria-selected', active ? 'true' : 'false');
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   API FETCH  — three-strategy waterfall
-   ═══════════════════════════════════════════════════════════════ */
+/* API FETCH */
 
-/** Map an Audius track object → internal Song schema */
 function mapAudiusTrack(t) {
   const artwork = (t.artwork?.['480x480'] || t.artwork?.['150x150'] || '');
   const streamUrl = t.id
@@ -371,7 +312,6 @@ function mapAudiusTrack(t) {
   };
 }
 
-/** Map an iTunes track object → internal Song schema */
 function mapItunesTrack(t) {
   return {
     id:       'i_' + t.trackId,
@@ -383,10 +323,9 @@ function mapItunesTrack(t) {
   };
 }
 
-/** Attempt to fetch from Audius. Returns Song[] or throws. */
 async function fetchAudius() {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 5000);          // 5 s timeout
+  const timer = setTimeout(() => ctrl.abort(), 5000);         
   try {
     const res = await fetch(AUDIUS_API, { signal: ctrl.signal });
     clearTimeout(timer);
@@ -402,7 +341,6 @@ async function fetchAudius() {
   }
 }
 
-/** Attempt to fetch from iTunes. Returns Song[] or throws. */
 async function fetchItunes() {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 5000);
@@ -421,14 +359,10 @@ async function fetchItunes() {
   }
 }
 
-/**
- * fetchPlaylist — tries each source in order, falls back to built-in.
- * Never throws; always resolves with a non-empty Song[].
- */
 async function fetchPlaylist() {
   hideStatus();
 
-  // 1 — Audius
+  
   try {
     const songs = await fetchAudius();
     console.info(`Loaded ${songs.length} tracks from Audius.`);
@@ -437,7 +371,7 @@ async function fetchPlaylist() {
     console.warn('Audius failed:', e.message);
   }
 /*
-  // 2 — iTunes
+  //iTunes
   try {
     const songs = await fetchItunes();
     console.info(`Loaded ${songs.length} tracks from iTunes.`);
@@ -448,9 +382,7 @@ async function fetchPlaylist() {
 */
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   TRACK LIST RENDERING
-   ═══════════════════════════════════════════════════════════════ */
+/* TRACK LIST RENDERING */
 function renderTrackList() {
   tracklistSkeleton.style.display = 'none';
   tracklistEl.innerHTML = '';
@@ -503,19 +435,13 @@ function scrollActiveIntoView() {
 function onTrackRowClick(idx) {
   loadSong(idx);
   play();
-  // On mobile switch to Now Playing; on desktop stay on Tracks
+ 
   if (!isDesktop()) switchView('now-playing');
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   PLAYLISTS  — group tracks by artist, sub-grouped by album
-   ═══════════════════════════════════════════════════════════════ */
+/* PLAYLISTS  */
 
-/**
- * Returns an array of folder objects:
- * { artist, albums: [ { album, tracks: [{ song, globalIndex }] } ] }
- * Sorted alphabetically, with Drake always at the top for fun.
- */
+
 function buildPlaylists(songs) {
   const artistMap = new Map();
 
@@ -532,14 +458,14 @@ function buildPlaylists(songs) {
   const folders = [...artistMap.entries()].map(([artist, albumMap]) => ({
     artist,
     albums: [...albumMap.entries()].map(([album, tracks]) => ({ album, tracks })),
-    // Gather up to 4 unique cover URLs for the mosaic
+    
     covers: [...new Set(
       [...albumMap.values()].flat().map(t => t.song.cover).filter(Boolean)
     )].slice(0, 4),
     totalTracks: [...albumMap.values()].flat().length,
   }));
 
-  // Sort: Drake first, then alphabetically
+  
   folders.sort((a, b) => {
     if (a.artist === 'Drake') return -1;
     if (b.artist === 'Drake') return 1;
@@ -549,7 +475,6 @@ function buildPlaylists(songs) {
   return folders;
 }
 
-/** Render the playlists view from the current playlist */
 function renderPlaylists() {
   plSkeleton.style.display = 'none';
   plFolderList.innerHTML   = '';
@@ -563,7 +488,7 @@ function renderPlaylists() {
     folderEl.className = 'pl-folder';
     folderEl.dataset.artist = folder.artist;
 
-    // ── Mosaic covers ──────────────────────────────────────────
+    
     const mosaicCount = Math.min(folder.covers.length, 4);
     const mosaicClass = `pl-folder__mosaic mosaic--${mosaicCount || 1}`;
     const mosaicImgs  = folder.covers
@@ -574,7 +499,7 @@ function renderPlaylists() {
 
     const albumNames = folder.albums.map(a => a.album).join(' · ');
 
-    // ── Folder header ──────────────────────────────────────────
+    
     folderEl.innerHTML = `
       <div class="pl-folder__hd" role="button"
            aria-expanded="false"
@@ -594,20 +519,20 @@ function renderPlaylists() {
       </div>
     `;
 
-    // ── Folder toggle ──────────────────────────────────────────
+    
     const hd       = folderEl.querySelector('.pl-folder__hd');
     const body     = folderEl.querySelector('.pl-folder__body');
     const playBtn  = folderEl.querySelector('.pl-folder__play-btn');
 
     hd.addEventListener('click', e => {
-      // Don't toggle if the play-all button was clicked
+      
       if (e.target.closest('.pl-folder__play-btn')) return;
       toggleFolder(folderEl, body);
     });
 
     playBtn.addEventListener('click', e => {
       e.stopPropagation();
-      // Load and play the first track of this folder
+      
       const firstIndex = folder.albums[0]?.tracks[0]?.globalIndex;
       if (firstIndex !== undefined) {
         loadSong(firstIndex);
@@ -616,7 +541,7 @@ function renderPlaylists() {
       }
     });
 
-    // ── Track click inside body ────────────────────────────────
+   
     body.addEventListener('click', e => {
       const row = e.target.closest('.pl-track-row');
       if (!row) return;
@@ -632,7 +557,6 @@ function renderPlaylists() {
   });
 }
 
-/** Build the inner HTML for an open folder body */
 function renderFolderBody(folder) {
   return folder.albums.map(({ album, tracks }) => {
     const rows = tracks.map(({ song, globalIndex }) => {
@@ -663,13 +587,12 @@ function renderFolderBody(folder) {
   }).join('');
 }
 
-/** Open or close a folder with a smooth height animation */
 function toggleFolder(folderEl, bodyEl) {
   const isOpen = folderEl.classList.contains('is-open');
   const hd     = folderEl.querySelector('.pl-folder__hd');
 
   if (isOpen) {
-    // Collapse: animate from current scrollHeight → 0
+   
     bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -679,11 +602,11 @@ function toggleFolder(folderEl, bodyEl) {
     folderEl.classList.remove('is-open');
     hd.setAttribute('aria-expanded', 'false');
   } else {
-    // Expand: set explicit px so transition plays
+   
     folderEl.classList.add('is-open');
     hd.setAttribute('aria-expanded', 'true');
     bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
-    // After transition, set to 'none' so content can grow freely
+    
     bodyEl.addEventListener('transitionend', () => {
       if (folderEl.classList.contains('is-open')) {
         bodyEl.style.maxHeight = 'none';
@@ -692,14 +615,13 @@ function toggleFolder(folderEl, bodyEl) {
   }
 }
 
-/** Sync active state inside open playlist folders */
 function syncPlaylistsActive() {
   plFolderList.querySelectorAll('.pl-track-row').forEach(row => {
     const active = parseInt(row.dataset.index, 10) === state.currentIndex;
     row.classList.toggle('is-active', active);
     row.setAttribute('aria-selected', active ? 'true' : 'false');
   });
-  // Also sync the cached duration labels
+
   state.playlist.forEach((_, idx) => {
     const el = document.getElementById(`pl-dur-${idx}`);
     const cached = document.getElementById(`track-dur-${idx}`);
@@ -707,7 +629,6 @@ function syncPlaylistsActive() {
   });
 }
 
-/* ── Lazy-load durations ──────────────────────────────────────── */
 const durationCache = {};
 
 async function prefetchDurations() {
@@ -745,9 +666,7 @@ function updateDurationEl(idx, secs) {
   if (elPl) elPl.textContent = formatted;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   LOAD SONG
-   ═══════════════════════════════════════════════════════════════ */
+/* LOAD SONG*/
 function loadSong(index) {
   const song = state.playlist[index];
   if (!song) return;
@@ -805,9 +724,7 @@ function loadCoverArt(song) {
   eqThumb.onerror = () => { eqThumb.src = `https://picsum.photos/seed/${song.id}/80/80`; };
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   PLAYBACK
-   ═══════════════════════════════════════════════════════════════ */
+/* PLAYBACK */
 async function play() {
   if (!state.playlist.length) return;
   try {
@@ -858,9 +775,7 @@ function prevTrack() {
   if (state.isPlaying) play();
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   UI HELPERS
-   ═══════════════════════════════════════════════════════════════ */
+/*UI HELPERS */
 function setPlayIcon(playing) {
   const cls = playing ? 'ph-fill ph-pause' : 'ph-fill ph-play';
   playIcon.className   = cls;
@@ -900,9 +815,7 @@ function escapeHtml(str) {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   EQ BAND SLIDER LOGIC
-   ═══════════════════════════════════════════════════════════════ */
+/*EQ BAND SLIDER LOGIC */
 
 /**
  * Update the visual fill, knob position, and value label for one EQ band.
@@ -915,13 +828,12 @@ function escapeHtml(str) {
 function updateBandUI(slider, fillEl, knobEl, valEl, db) {
   const trackEl  = slider.closest('.eq-band__track');
   const trackH   = trackEl.offsetHeight;
-  const range    = 24;           // total range: -12 to +12
-  const centre   = trackH / 2;  // y-position of 0 dB
+  const range    = 24;           
+  const centre   = trackH / 2;  
 
-  // Fraction of full range (0 = -12dB, 0.5 = 0dB, 1 = +12dB)
-  const frac = (db - (-12)) / range;   // 0…1
+  const frac = (db - (-12)) / range;   
   const knobH = knobEl.offsetHeight || 24;
-  const knobY = (1 - frac) * (trackH - knobH); // top pixel (inverted)
+  const knobY = (1 - frac) * (trackH - knobH);
 
   knobEl.style.top = knobY + 'px';
 
@@ -941,13 +853,13 @@ function updateBandUI(slider, fillEl, knobEl, valEl, db) {
     fillEl.style.height = '0px';
   }
 
-  // Label
+  
   const sign = db > 0 ? '+' : '';
   valEl.textContent = `${sign}${db.toFixed(1)} dB`;
   valEl.className = 'eq-band__value' +
     (db > 0 ? '' : db < 0 ? ' is-negative' : ' is-zero');
 
-  // ARIA
+  
   slider.setAttribute('aria-valuetext', `${sign}${db.toFixed(1)} dB`);
 }
 
@@ -957,7 +869,7 @@ function updateBandUI(slider, fillEl, knobEl, valEl, db) {
  * @param {number} db
  */
 function applyBandGain(band, db) {
-  // Initialise AudioContext on first EQ interaction if not yet done
+  
   if (!audioCtx) initAudioContext();
 
   if (band === 'bass'   && filterBass)   filterBass.gain.value   = db;
@@ -973,16 +885,15 @@ function applyBandGain(band, db) {
   updateBandUI(slider, fill, knob, val, db);
 }
 
-/** Re-render all three band UIs (e.g. after layout reflow or reset) */
+
 function refreshAllBandUIs() {
   applyBandGain('bass',   parseFloat(eqSliderBass.value));
   applyBandGain('mid',    parseFloat(eqSliderMid.value));
   applyBandGain('treble', parseFloat(eqSliderTreble.value));
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   EVENT LISTENERS
-   ═══════════════════════════════════════════════════════════════ */
+/* EVENT LISTENERS
+ */
 
 // Navigation
 allNavTabs.forEach(tab => {
@@ -1042,7 +953,7 @@ volumeSlider.addEventListener('input', () => {
 // Status banner
 statusClose.addEventListener('click', hideStatus);
 
-// ── EQ band sliders ────────────────────────────────────────────
+//EQ band sliders 
 [
   { slider: eqSliderBass,   band: 'bass'   },
   { slider: eqSliderMid,    band: 'mid'    },
@@ -1114,19 +1025,17 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// Re-apply layout on resize (mobile ↔ desktop crossover)
+// Re-apply layout on resize 
 let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    // Re-run switchView so panel visibility stays consistent
+    
     switchView(state.activeView);
   }, 120);
 });
 
-/* ═══════════════════════════════════════════════════════════════
-   INIT
-   ═══════════════════════════════════════════════════════════════ */
+/* INIT */
 async function init() {
   // Build visualizer bar elements
   buildBars(vizMini,    BAR_COUNT_MINI);
@@ -1142,9 +1051,6 @@ async function init() {
 
   songTitle.textContent = 'Loading…';
 
-  // Set initial view state
-  // Desktop: right panel defaults to tracklist
-  // Mobile:  bottom nav defaults to now-playing (already set in HTML)
   switchView('tracklist');
 
   // Fetch playlist
@@ -1161,7 +1067,7 @@ async function init() {
   loadSong(0);
   prefetchDurations();
 
-  // Render EQ band fills/knobs after layout has settled
+  // Render EQ band knobs
   requestAnimationFrame(() => requestAnimationFrame(refreshAllBandUIs));
 }
 
