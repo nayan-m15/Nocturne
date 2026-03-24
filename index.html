@@ -17,16 +17,12 @@
 
   <div class="app" id="app">
 
-    <!-- ╔══════════════════════════════════════════════════════╗
-         ║  HEADER  (full width on all breakpoints)           ║
-         ╚══════════════════════════════════════════════════════╝ -->
     <header class="app-header" role="banner">
       <div class="app-header__left">
         <span class="brand-dot" aria-hidden="true"></span>
         <h1 class="brand-name">Nocturne</h1>
       </div>
 
-      <!-- Desktop inline nav (hidden on mobile, shown on desktop) -->
       <nav class="header-nav" role="tablist" aria-label="App navigation">
         <button class="header-nav__tab"
                 data-view="equaliser"
@@ -52,7 +48,6 @@
       </nav>
 
       <div class="app-header__right">
-        <!-- Playing indicator bars -->
         <div class="hdr-indicator" id="hdr-indicator" aria-hidden="true">
           <span class="hdr-bar"></span>
           <span class="hdr-bar"></span>
@@ -61,18 +56,13 @@
       </div>
     </header>
 
-    <!-- ╔══════════════════════════════════════════════════════╗
-         ║  BODY  (header below this, nav above footer)       ║
-         ╚══════════════════════════════════════════════════════╝ -->
     <div class="app-body">
-
-      <!-- ── LEFT PANEL — Now Playing (always visible on desktop) ── -->
       <section class="panel panel--now-playing"
                id="view-now-playing"
                role="region"
                aria-label="Now Playing">
 
-        <!-- Album artwork -->
+     
         <div class="np-artwork">
           <div class="np-vinyl" aria-hidden="true"></div>
           <div class="np-cover-wrap" id="np-cover-wrap">
@@ -83,19 +73,17 @@
           </div>
         </div>
 
-        <!-- Song meta -->
         <div class="np-meta" id="np-meta" aria-live="polite" aria-atomic="true">
           <p  id="song-artist" class="np-meta__artist">—</p>
           <h2 id="song-title"  class="np-meta__title">Loading…</h2>
           <p  id="song-album"  class="np-meta__album"></p>
         </div>
 
-        <!-- Mini visualizer -->
+       
         <div class="np-mini-vis" aria-hidden="true">
           <div class="visualizer visualizer--mini idle" id="visualizer-mini"></div>
         </div>
 
-        <!-- Seek / progress -->
         <section class="progress-section" aria-label="Playback position">
           <span id="time-current" class="time time--current">0:00</span>
           <div class="progress-track" id="progress-track">
@@ -107,7 +95,6 @@
           <span id="time-total" class="time time--total">0:00</span>
         </section>
 
-        <!-- Playback controls -->
         <section class="controls" aria-label="Playback controls">
           <button class="ctrl ctrl--small" id="btn-shuffle" aria-label="Toggle shuffle">
             <i class="ph ph-shuffle"></i>
@@ -126,7 +113,7 @@
           </button>
         </section>
 
-        <!-- Volume -->
+       
         <section class="volume-section" aria-label="Volume">
           <button class="vol-btn" id="btn-mute" aria-label="Mute/unmute">
             <i class="ph ph-speaker-low" id="vol-icon"></i>
@@ -140,20 +127,15 @@
         </section>
 
       </section>
-      <!-- /panel--now-playing -->
 
-
-      <!-- ── RIGHT PANEL — Equaliser + Tracklist ─────────────────── -->
       <div class="panel panel--right" id="panel-right">
 
-        <!-- ── EQUALISER VIEW ──────────────────────────────────────── -->
         <section class="view view--equaliser"
                  id="view-equaliser"
                  role="region"
                  aria-label="Equaliser"
                  aria-hidden="true">
 
-          <!-- Mini now-playing strip with play btn -->
           <div class="eq-strip" aria-live="polite">
             <img id="eq-thumb" class="eq-strip__thumb"
                  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
@@ -167,7 +149,6 @@
             </button>
           </div>
 
-          <!-- Live frequency visualizer -->
           <div class="eq-canvas" aria-hidden="true">
             <div class="visualizer visualizer--large idle" id="visualizer-large"></div>
             <div class="eq-reflection" aria-hidden="true">
@@ -175,16 +156,14 @@
             </div>
           </div>
 
-          <!-- Frequency axis labels -->
           <div class="eq-freq-axis" aria-hidden="true">
             <span>20 Hz</span><span>200 Hz</span><span>1 kHz</span>
             <span>4 kHz</span><span>10 kHz</span><span>20 kHz</span>
           </div>
 
-          <!-- ── EQ BAND SLIDERS ─────────────────────────────── -->
           <div class="eq-bands" role="group" aria-label="Equaliser bands">
 
-            <!-- Bass -->
+            
             <div class="eq-band" id="eq-band-bass">
               <span class="eq-band__value" id="eq-val-bass">0 dB</span>
               <div class="eq-band__track" id="eq-track-bass">
@@ -198,7 +177,6 @@
               <span class="eq-band__sublabel">80 Hz</span>
             </div>
 
-            <!-- Mid -->
             <div class="eq-band" id="eq-band-mid">
               <span class="eq-band__value" id="eq-val-mid">0 dB</span>
               <div class="eq-band__track" id="eq-track-mid">
@@ -212,7 +190,6 @@
               <span class="eq-band__sublabel">1 kHz</span>
             </div>
 
-            <!-- Treble -->
             <div class="eq-band" id="eq-band-treble">
               <span class="eq-band__value" id="eq-val-treble">0 dB</span>
               <div class="eq-band__track" id="eq-track-treble">
@@ -227,9 +204,7 @@
             </div>
 
           </div>
-          <!-- /eq-bands -->
 
-          <!-- Reset all bands -->
           <div class="eq-reset-row">
             <button class="eq-reset-btn" id="eq-reset" aria-label="Reset all EQ bands to 0 dB">
               <i class="ph ph-arrow-counter-clockwise"></i>
@@ -238,10 +213,7 @@
           </div>
 
         </section>
-        <!-- /view--equaliser -->
 
-
-        <!-- ── TRACKLIST VIEW ──────────────────────────────────────── -->
         <section class="view view--tracklist is-active"
                  id="view-tracklist"
                  role="region"
@@ -253,7 +225,6 @@
             <span class="tracklist-count" id="tracklist-count"></span>
           </div>
 
-          <!-- Loading skeleton -->
           <div class="tracklist-skeleton" id="tracklist-skeleton">
             <div class="sk-row"><div class="sk-thumb"></div><div class="sk-body"><div class="sk-line sk--w70"></div><div class="sk-line sk--w45"></div></div></div>
             <div class="sk-row"><div class="sk-thumb"></div><div class="sk-body"><div class="sk-line sk--w55"></div><div class="sk-line sk--w35"></div></div></div>
@@ -265,10 +236,7 @@
           <ol class="tracklist" id="tracklist" role="listbox" aria-label="Track list"></ol>
 
         </section>
-        <!-- /view--tracklist -->
 
-
-        <!-- ── PLAYLISTS VIEW ──────────────────────────────────────── -->
         <section class="view view--playlists"
                  id="view-playlists"
                  role="region"
@@ -280,26 +248,22 @@
             <span class="pl-subtitle" id="pl-subtitle"></span>
           </div>
 
-          <!-- Skeleton -->
           <div class="tracklist-skeleton" id="playlists-skeleton">
             <div class="sk-row"><div class="sk-thumb sk-thumb--lg"></div><div class="sk-body"><div class="sk-line sk--w60"></div><div class="sk-line sk--w35"></div></div></div>
             <div class="sk-row"><div class="sk-thumb sk-thumb--lg"></div><div class="sk-body"><div class="sk-line sk--w75"></div><div class="sk-line sk--w40"></div></div></div>
             <div class="sk-row"><div class="sk-thumb sk-thumb--lg"></div><div class="sk-body"><div class="sk-line sk--w55"></div><div class="sk-line sk--w30"></div></div></div>
           </div>
 
-          <!-- Folder list — populated by JS -->
           <div class="pl-folder-list" id="pl-folder-list"></div>
 
         </section>
-        <!-- /view--playlists -->
+     
 
       </div>
-      <!-- /panel--right -->
+      
 
     </div>
-    <!-- /app-body -->
 
-    <!-- ── STATUS BANNER ───────────────────────────────────────────── -->
     <div class="status-banner" id="status-banner"
          role="alert" aria-live="assertive" hidden>
       <i class="ph ph-warning-circle"></i>
@@ -309,7 +273,6 @@
       </button>
     </div>
 
-    <!-- ── BOTTOM NAV (mobile only) ──────────────────────────────── -->
     <nav class="bottom-nav" role="tablist" aria-label="App navigation">
       <button class="nav-tab is-active"
               data-view="now-playing"
@@ -342,7 +305,7 @@
     </nav>
 
   </div>
-  <!-- /app -->
+
 
   <audio id="audio-element" preload="metadata"></audio>
   <script src="script.js"></script>
