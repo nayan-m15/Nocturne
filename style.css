@@ -36,10 +36,10 @@
 
   /* Chrome heights — fluid between viewport sizes */
   --header-h: clamp(52px, 7vh, 66px);
-  --nav-h:    clamp(60px, 8vh, 72px);   /* mobile only */
+  --nav-h:    clamp(60px, 8vh, 72px);   
 }
 
-/* ── RESET ────────────────────────────────────────────────────── */
+/* RESET */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { height: 100%; font-size: 16px; }
 
@@ -59,7 +59,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 img    { display: block; }
 ol, ul { list-style: none; }
 
-/* ── GRAIN ────────────────────────────────────────────────────── */
+/* GRAIN */
 .grain-overlay {
   position: fixed; inset: 0; pointer-events: none; z-index: 200;
   opacity: 0.028;
@@ -72,12 +72,11 @@ ol, ul { list-style: none; }
   flex-direction: column;
   width: 100%;
   height: 100dvh;
-  /* No max-width — fills the screen on every device */
   position: relative;
   background: var(--bg);
 }
 
-/* ── HEADER ───────────────────────────────────────────────────── */
+/* HEADER  */
 .app-header {
   flex-shrink: 0;
   height: var(--header-h);
@@ -117,7 +116,7 @@ ol, ul { list-style: none; }
 }
 
 .header-nav {
-  display: none;                /* mobile: hidden — overridden below */
+  display: none;                
   align-items: center;
   gap: 4px;
   background: var(--surface-2);
@@ -189,7 +188,7 @@ ol, ul { list-style: none; }
 .app-body {
   flex: 1;
   min-height: 0;
-  display: flex;          /* overridden to grid on desktop */
+  display: flex;          
   position: relative;
   overflow: hidden;
 }
@@ -236,7 +235,7 @@ ol, ul { list-style: none; }
   
   opacity: 1 !important;
   transform: none !important;
-  pointer-events: none;  /* children handle their own pointer events */
+  pointer-events: none;  
 }
 
 /* On mobile, views inside panel--right are absolutely stacked */
@@ -382,7 +381,7 @@ ol, ul { list-style: none; }
 /* Mini visualizer strip */
 .np-mini-vis { width: 100%; padding: 0 2px; }
 
-/* ── PROGRESS BAR ─────────────────────────────────────────────── */
+/* PROGRESS BAR  */
 .progress-section {
   display: flex;
   align-items: center;
@@ -445,7 +444,7 @@ ol, ul { list-style: none; }
   pointer-events: none;
 }
 
-/* ── CONTROLS ─────────────────────────────────────────────────── */
+/* CONTROLS  */
 .controls {
   display: flex;
   align-items: center;
@@ -516,7 +515,7 @@ ol, ul { list-style: none; }
   flex-shrink: 0;
 }
 
-/* ── VOLUME ───────────────────────────────────────────────────── */
+/* VOLUME  */
 .volume-section {
   display: flex;
   align-items: center;
@@ -645,7 +644,7 @@ ol, ul { list-style: none; }
   letter-spacing: 0.03em;
 }
 
-/* ── EQ BAND CONTROLS ─────────────────────────────────────────── */
+/* EQ BAND CONTROL*/
 .eq-bands {
   display: flex;
   gap: clamp(10px, 2vw, 20px);
@@ -689,7 +688,7 @@ ol, ul { list-style: none; }
 
 /* Negative dB: fill goes downward from centre */
 .eq-band__fill.is-negative {
-  background: #8090c8;   /* cool blue for cut */
+  background: #8090c8;  
 }
 
 /* Centre 0 dB tick */
@@ -803,9 +802,7 @@ ol, ul { list-style: none; }
   background: var(--surface-2);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   TRACK LIST VIEW
-   ══════════════════════════════════════════════════════════════ */
+/* TRACK LIST VIEW */
 .view--tracklist {
   padding: 0;
   gap: 0;
@@ -1005,7 +1002,7 @@ ol, ul { list-style: none; }
 }
 
 .visualizer--large {
-  height: 100%;       /* fills eq-canvas flex remaining space */
+  height: 100%;      
   min-height: 60px;
   align-items: flex-end;
 }
@@ -1046,7 +1043,7 @@ ol, ul { list-style: none; }
 
 .status-banner {
   position: absolute;
-  bottom: calc(var(--nav-h) + 8px);   /* above mobile nav */
+  bottom: calc(var(--nav-h) + 8px);   
   left: clamp(8px, 2vw, 16px);
   right: clamp(8px, 2vw, 16px);
   display: flex;
@@ -1146,7 +1143,6 @@ ol, ul { list-style: none; }
   /* App body becomes a two-column grid */
   .app-body {
     display: grid;
-    /* Left column: fluid between 300px and 420px, right: fills rest */
     grid-template-columns: clamp(300px, 36%, 420px) 1fr;
     gap: 0;
     overflow: hidden;
@@ -1154,13 +1150,12 @@ ol, ul { list-style: none; }
 
   /* ── LEFT PANEL: Now Playing ────────────────────────────────── */
   .panel--now-playing {
-    position: relative;      /* no longer absolutely stacked */
+    position: relative;      
     opacity: 1 !important;
     transform: none !important;
     pointer-events: auto !important;
     border-right: 1px solid var(--border);
     overflow-y: auto;
-    /* Recalculate artwork size for the narrower column */
     --artwork-size: clamp(160px, 28vw, 300px);
   }
 
@@ -1171,7 +1166,7 @@ ol, ul { list-style: none; }
 
   /* ── RIGHT PANEL ────────────────────────────────────────────── */
   .panel--right {
-    position: relative;      /* part of grid, not absolutely stacked */
+    position: relative;      
     pointer-events: auto;
     display: flex;
     flex-direction: column;
@@ -1184,8 +1179,6 @@ ol, ul { list-style: none; }
     inset: 0;
   }
 
-  /* Now Playing mobile view (hidden on desktop — we show the panel instead) */
-  /* No extra override needed; the panel handles it */
 }
 
 @media (min-width: 1200px) {
